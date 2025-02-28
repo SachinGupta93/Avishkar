@@ -20,6 +20,17 @@ const Home: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
+  // Standardized section heading component with consistent spacing
+  const SectionHeading = ({ title }: { title: string }) => (
+    <div className="text-center mb-8">
+      <div className="flex items-center justify-center gap-6 mb-6">
+        <div className="w-24 sm:w-32 h-[2px] bg-[#15A6F7]"></div>
+        <h2 className="text-[36px] sm:text-[48px] font-bold text-[#15A6F7] whitespace-nowrap">{title}</h2>
+        <div className="w-24 sm:w-32 h-[2px] bg-[#15A6F7]"></div>
+      </div>
+    </div>
+  );
+
   return (
     <>
       {/* Hero Section */}
@@ -52,7 +63,7 @@ const Home: React.FC = () => {
             >
               {headlines[currentIndex].subtitle}
             </motion.p>
-            
+
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -72,9 +83,9 @@ const Home: React.FC = () => {
         </div>
       </section>
 
-      {/* Countdown Section */}
-      <section className="py-8 sm:py-12 bg-white">
-        <div className="max-w-6xl mx-auto px-4">
+      {/* Countdown Section - Using consistent padding */}
+      <section className="py-8 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -85,48 +96,38 @@ const Home: React.FC = () => {
         </div>
       </section>
 
-      {/* About Section */}
-      <section id="about" className="py-8 sm:py-12 bg-white relative">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-          <div className="text-center mb-12">
-            <div className="flex items-center justify-center gap-4 sm:gap-8 mb-8">
-              <div className="w-24 sm:w-48 h-[2px] bg-[#15A6F7]"></div>
-              <h2 className="text-[36px] sm:text-[48px] font-bold text-[#15A6F7] whitespace-nowrap">About Avishkar</h2>
-              <div className="w-24 sm:w-48 h-[2px] bg-[#15A6F7]"></div>
+      {/* About Section - Standardized padding */}
+      <section id="about" className="bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Using standardized heading */}
+          <SectionHeading title="About Avishkar" />
+
+          <div className="relative">
+            {/* Background Logo - increased size for mobile */}
+            <div className="absolute left-1/2 top-[60%] -translate-x-1/2 -translate-y-1/2">
+              <img
+                src={getImagePath('/logo/AVK_LOGO.png')}
+                alt="AVK Logo Background"
+                className="w-[350px] sm:w-[450px] h-[220px] sm:h-[250px] object-contain opacity-20"
+              />
             </div>
 
-            <div className="relative mt-8 sm:mt-12">
-              {/* Background Logo - increased size for mobile */}
-              <div className="absolute left-1/2 top-[60%] -translate-x-1/2 -translate-y-1/2">
-                <img 
-                  src={getImagePath('/logo/AVK_LOGO.png')}
-                  alt="AVK Logo Background" 
-                  className="w-[350px] sm:w-[450px] h-[220px] sm:h-[250px] object-contain opacity-20"
-                />
-              </div>
-
-              {/* Text Content */}
-              <p className="text-lg mt-24 sm:text-xl text-gray-600 max-w-6xl mx-auto text-justify px-2 sm:px-4 relative z-10">
-                Avishkar, the flagship event of IEEE - VBIT SB, is a Technical Paper Presentation competition held exclusively for the freshmen of VBIT. In the year 2011, Avishkar was awarded the esteemed 'Darrel Chong Gold Student Activity Award' in recognition of conducting Avishkar consecutively for five years. Avishkar significantly contributes to the experience of first-year VBIT students by offering a platform where they can present their innovative ideas and improve their communication abilities through technical presentations.
-              </p>
-            </div>
+            {/* Text Content */}
+            <p className="text-lg sm:text-xl text-gray-700 max-w-6xl mx-auto text-justify px-2 sm:px-4 relative z-10">
+              Avishkar, the flagship event of IEEE - VBIT SB, is a Technical Paper Presentation competition held exclusively for the freshmen of VBIT. In the year 2011, Avishkar was awarded the esteemed 'Darrel Chong Gold Student Activity Award' in recognition of conducting Avishkar consecutively for five years. Avishkar significantly contributes to the experience of first-year VBIT students by offering a platform where they can present their innovative ideas and improve their communication abilities through technical presentations.
+            </p>
           </div>
         </div>
       </section>
 
-      {/* Gallery Section - reduced top padding */}
-      <section className="pt-0 pb-8 sm:pb-12 bg-white">
+      {/* Gallery Section - Standardized padding */}
+      <section className="py-4 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-8">
-            <div className="flex items-center justify-center gap-4 sm:gap-8 mb-8">
-              <div className="w-24 sm:w-48 h-[2px] bg-[#15A6F7]"></div>
-              <h2 className="text-[36px] sm:text-[48px] font-bold text-[#15A6F7] whitespace-nowrap">Gallery</h2>
-              <div className="w-24 sm:w-48 h-[2px] bg-[#15A6F7]"></div>
-            </div>
-          </div>
+          {/* Using standardized heading */}
+          <SectionHeading title="Gallery" />
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-6">
-            <motion.div 
+            <motion.div
               whileHover={{ scale: 1.05 }}
               transition={{ duration: 0.3 }}
               className="relative aspect-[4/3] overflow-hidden rounded-2xl shadow-lg"
@@ -138,7 +139,7 @@ const Home: React.FC = () => {
               />
             </motion.div>
 
-            <motion.div 
+            <motion.div
               whileHover={{ scale: 1.05 }}
               transition={{ duration: 0.3 }}
               className="relative aspect-[4/3] overflow-hidden rounded-2xl shadow-lg"
@@ -150,7 +151,7 @@ const Home: React.FC = () => {
               />
             </motion.div>
 
-            <motion.div 
+            <motion.div
               whileHover={{ scale: 1.05 }}
               transition={{ duration: 0.3 }}
               className="relative aspect-[4/3] overflow-hidden rounded-2xl shadow-lg"

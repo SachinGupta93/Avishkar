@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { Instagram, Linkedin } from 'lucide-react';
 import { getImagePath } from '../utils/imageUtils';
+import { useState, useEffect, useRef } from 'react';
 
 // Team member data
 const teamMembers = [
@@ -188,6 +189,70 @@ const teamMembers = [
 ];
 
 const OurTeam = () => {
+  // Track loading state of each image
+  const [imageLoaded, setImageLoaded] = useState<Record<number, boolean>>({});
+  
+  // Initialize all images as not loaded
+  useEffect(() => {
+    const initialLoadState: Record<number, boolean> = {};
+    teamMembers.forEach((_, index) => {
+      initialLoadState[index] = false;
+    });
+    setImageLoaded(initialLoadState);
+    
+    // Create an observer to detect when images enter viewport
+    const observerOptions = {
+      root: null,
+      rootMargin: "100px", // Start loading a bit before they come into view
+      threshold: 0.1
+    };
+    
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const img = entry.target as HTMLImageElement;
+          const index = Number(img.dataset.index);
+          // Start loading the image
+          img.src = teamMembers[index].image;
+          // Stop observing once we've started loading
+          observer.unobserve(img);
+        }
+      });
+    }, observerOptions);
+    
+    // Observe all image placeholders
+    const imgElements = document.querySelectorAll('.team-image');
+    imgElements.forEach(img => {
+      observer.observe(img);
+    });
+    
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+
+  const handleImageLoad = (index: number, e: React.SyntheticEvent<HTMLImageElement>) => {
+    const target = e.target as HTMLImageElement;
+    if (target.complete) {
+      // Small timeout to ensure spinner is visible for at least a moment
+      setTimeout(() => {
+        setImageLoaded(prev => ({ ...prev, [index]: true }));
+      }, 300);
+    }
+  };
+
+  const handleImageError = (index: number, e: React.SyntheticEvent<HTMLImageElement>) => {
+    const target = e.target as HTMLImageElement;
+    target.src = getImagePath('/images/default-avatar.png');
+    
+    // Only mark as loaded when the default image is loaded
+    target.onload = () => {
+      setTimeout(() => {
+        setImageLoaded(prev => ({ ...prev, [index]: true }));
+      }, 300);
+    };
+  };
+
   return (
     <div className="min-h-screen bg-white py-16">
       <div className="text-center mb-8 mt-16">
@@ -229,21 +294,28 @@ const OurTeam = () => {
                 </div>
 
                 <div className="aspect-[3/4] overflow-hidden relative">
-                  <div className="absolute inset-0 bg-gray-200 animate-pulse" />
+                  {/* Always show the spinner until the image is confirmed loaded */}
+                  <div 
+                    className={`absolute inset-0 flex items-center justify-center bg-gray-100 z-[2] transition-opacity duration-300 ${
+                      imageLoaded[index] ? 'opacity-0 pointer-events-none' : 'opacity-100'
+                    }`}
+                  >
+                    <div
+                      className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-[#15A6F7] border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"
+                      role="status">
+                      <span
+                        className="!absolute !-m-px !h-px !w-px !overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]"
+                      >Loading...</span>
+                    </div>
+                  </div>
                   
                   <img
-                    src={member.image}
+                    data-index={index}
                     alt={member.name}
-                    className="w-full h-full object-cover relative z-[1] transition-opacity duration-300"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.src = getImagePath('/images/default-avatar.png');
-                    }}
-                    onLoad={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.style.opacity = '1';
-                    }}
-                    style={{ opacity: 0 }}
+                    className="team-image w-full h-full object-cover relative z-[1] transition-opacity duration-300"
+                    onError={(e) => handleImageError(index, e)}
+                    onLoad={(e) => handleImageLoad(index, e)}
+                    style={{ opacity: imageLoaded[index] ? 1 : 0 }}
                   />
                 </div>
 

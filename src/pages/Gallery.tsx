@@ -54,6 +54,16 @@ const galleryImages = [
 const Gallery = () => {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState(false);
+  const [imagesLoaded, setImagesLoaded] = useState<Record<number, boolean>>({});
+  
+  // Initialize loading state for all images
+  useEffect(() => {
+    const initialLoadState: Record<number, boolean> = {};
+    galleryImages.forEach(image => {
+      initialLoadState[image.id] = false;
+    });
+    setImagesLoaded(initialLoadState);
+  }, []);
 
   // Add window resize listener to detect mobile
   useEffect(() => {
@@ -73,9 +83,25 @@ const Gallery = () => {
     }
   };
 
+  const handleImageLoad = (id: number) => {
+    setImagesLoaded(prev => ({ ...prev, [id]: true }));
+  };
+
+  const handleImageError = (id: number) => {
+    // On error, try to load a placeholder image
+    const img = document.querySelector(`img[data-id="${id}"]`) as HTMLImageElement;
+    if (img) {
+      img.src = getImagePath('/images/placeholder.jpg');
+      // Mark as loaded after a short delay to prevent infinite loading
+      setTimeout(() => {
+        setImagesLoaded(prev => ({ ...prev, [id]: true }));
+      }, 500);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-white py-16">
-      <div className="text-center mb-8 mt-16">
+      <div className="text-center mb-12 mt-16">
         <div className="flex items-center justify-center gap-4 sm:gap-8 mb-8">
           <div className="w-24 sm:w-48 h-[2px] bg-[#15A6F7]"></div>
           <h2 className="text-[36px] sm:text-[48px] font-bold text-[#15A6F7] whitespace-nowrap">Gallery</h2>
@@ -96,20 +122,43 @@ const Gallery = () => {
                 } shadow-lg`}
                 onClick={() => handleImageClick(image.src)}
               >
+                {/* Loading spinner for each image */}
+                <div 
+                  className={`absolute inset-0 bg-gray-100 flex items-center justify-center z-10 transition-opacity duration-300 ${
+                    imagesLoaded[image.id] ? 'opacity-0 pointer-events-none' : 'opacity-100'
+                  }`}
+                >
+                  <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-[#15A6F7] border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]" role="status">
+                    <span className="!absolute !-m-px !h-px !w-px !overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]">Loading...</span>
+                  </div>
+                </div>
+
+                {/* Actual image */}
                 <img
+                  data-id={image.id}
                   src={image.src}
                   alt={image.alt}
-                  className="w-full h-full object-cover"
+                  className={`w-full h-full object-cover transition-opacity duration-300 ${
+                    imagesLoaded[image.id] ? 'opacity-100' : 'opacity-0'
+                  }`}
+                  onLoad={() => handleImageLoad(image.id)}
+                  onError={() => handleImageError(image.id)}
+                  loading="lazy"
                 />
+                
+                {/* Overlay */}
                 <div className={`absolute inset-0 ${
                   !isMobile ? 'bg-black/20 hover:bg-black/10' : 'bg-black/10'
-                } transition-colors duration-300`}></div>
+                } transition-colors duration-300 ${
+                  imagesLoaded[image.id] ? 'opacity-100' : 'opacity-0'
+                }`}></div>
               </motion.div>
             ))}
           </div>
         </div>
       </div>
 
+      {/* Lightbox for selected image */}
       <AnimatePresence>
         {selectedImage && (
           <motion.div

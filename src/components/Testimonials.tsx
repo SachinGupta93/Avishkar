@@ -50,8 +50,12 @@ const testimonials = [
 const cardVariants = {
   enter: (direction: number) => ({
     x: direction > 0 ? 580 : -580,
-    opacity: direction > 0 ? 0.5 : 0,
-    scale: 0.9
+    opacity: 0,
+    scale: 0.9,
+    transition: {
+      duration: 0.3,
+      ease: "easeIn"
+    }
   }),
   center: {
     x: 0,
@@ -64,10 +68,10 @@ const cardVariants = {
   },
   exit: (direction: number) => ({
     x: direction > 0 ? -580 : 580,
-    opacity: direction > 0 ? 0 : 0.5,
+    opacity: 0,
     scale: 0.9,
     transition: {
-      duration: 0.5,
+      duration: 0.3,
       ease: "easeIn"
     }
   })
@@ -80,8 +84,13 @@ const swipePower = (offset: number, velocity: number) => {
 
 const Testimonials = () => {
   const [[page, direction], setPage] = useState([0, 0]);
+  const [imageLoaded, setImageLoaded] = useState<Record<string, boolean>>({});
 
   const paginate = (newDirection: number) => {
+    if (document.querySelector('.testimonial-card[data-animating="true"]')) {
+      return;
+    }
+
     if (page + newDirection < 0) {
       setPage([testimonials.length - 1, newDirection]);
     } else if (page + newDirection >= testimonials.length) {
@@ -91,24 +100,37 @@ const Testimonials = () => {
     }
   };
 
-  // Auto-advance every 4 seconds
   useEffect(() => {
     const timer = setInterval(() => {
-      paginate(1);
+      if (!document.querySelector('.testimonial-card[data-animating="true"]')) {
+        paginate(1);
+      }
     }, 5000);
     return () => clearInterval(timer);
   }, [page]);
 
   const handleDotClick = useCallback((index: number) => {
     if (index === page) return;
+
+    if (document.querySelector('.testimonial-card[data-animating="true"]')) {
+      return;
+    }
+
     const direction = index > page ? 1 : -1;
     setPage([index, direction]);
   }, [page]);
 
+  const handleImageLoad = (id: string) => {
+    setImageLoaded(prev => ({ ...prev, [id]: true }));
+  };
+
+  const prevIndex = (page - 1 + testimonials.length) % testimonials.length;
+  const nextIndex = (page + 1) % testimonials.length;
+
   return (
-    <section className="py-24 sm:py-32 bg-[#0077B6] overflow-hidden">
+    <section className="py-12 sm:py-18 bg-[#0077B6] overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16">
+        <div className="text-center mb-12 sm:mb-16">
           <div className="flex items-center justify-center gap-8 mb-16">
             <div className="w-48 h-1 bg-white"></div>
             <h2 className="text-[36px] sm:text-[48px] font-bold text-white whitespace-nowrap">Testimonials</h2>
@@ -117,33 +139,38 @@ const Testimonials = () => {
         </div>
 
         <div className="relative max-w-7xl mx-auto flex justify-center items-center gap-4 custom:gap-8">
-          {/* Previous Card - Hidden below 900px */}
-          <div className="hidden custom:block w-[450px] h-[600px] bg-[#E8F4F8] rounded-3xl p-6 sm:p-8 shadow-lg opacity-50">
+          <div
+            className="hidden custom:block w-[450px] h-[600px] bg-[#E8F4F8] rounded-3xl p-6 sm:p-8 shadow-lg opacity-50 transition-opacity duration-300"
+            style={{
+              opacity: direction > 0 ? 0.3 : 0.5,
+              transition: 'opacity 0.3s ease-in-out'
+            }}
+          >
             <div className="flex items-center gap-4 sm:gap-6 mb-4 sm:mb-8">
               <img
-                src={testimonials[(page - 1 + testimonials.length) % testimonials.length].image}
+                src={testimonials[prevIndex].image}
                 alt="Previous testimonial"
+                onLoad={() => handleImageLoad(`prev-${prevIndex}`)}
                 className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover bg-gray-200"
               />
               <div>
                 <h3 className="font-bold text-xl sm:text-2xl text-gray-900">
-                  {testimonials[(page - 1 + testimonials.length) % testimonials.length].name}
+                  {testimonials[prevIndex].name}
                 </h3>
                 <p className="text-base sm:text-lg text-gray-600">
-                  {testimonials[(page - 1 + testimonials.length) % testimonials.length].role}
+                  {testimonials[prevIndex].role}
                 </p>
               </div>
             </div>
             <div className="h-auto">
               <p className="text-sm sm:text-base leading-snug sm:leading-relaxed text-gray-700 whitespace-pre-line text-justify">
-                {testimonials[(page - 1 + testimonials.length) % testimonials.length].text}
+                {testimonials[prevIndex].text}
               </p>
             </div>
           </div>
 
-          {/* Animated Current Card - Updated with mobile responsive sizes */}
           <div className="relative w-[300px] sm:w-[580px] h-[500px] sm:h-[650px]">
-            <AnimatePresence initial={false} custom={direction} mode="popLayout">
+            <AnimatePresence initial={false} custom={direction} mode="wait">
               <motion.div
                 key={page}
                 custom={direction}
@@ -163,13 +190,33 @@ const Testimonials = () => {
                     paginate(-1);
                   }
                 }}
-                className="absolute top-0 left-0 w-full h-full bg-[#E8F4F8] rounded-3xl p-4 sm:p-8 shadow-xl"
+                className="testimonial-card absolute top-0 left-0 w-full h-full bg-[#E8F4F8] rounded-3xl p-4 sm:p-8 shadow-xl"
+                onAnimationStart={() => {
+                  const element = document.querySelector('.testimonial-card');
+                  if (element) element.setAttribute('data-animating', 'true');
+                }}
+                onAnimationComplete={() => {
+                  const element = document.querySelector('.testimonial-card');
+                  if (element) element.setAttribute('data-animating', 'false');
+                }}
               >
-                <div className="flex items-center gap-4 sm:gap-6 mb-4 sm:mb-8">
+                <div className="flex items-center gap-4 sm:gap-6 mb-4 sm:mb-4">
+                  {!imageLoaded[`current-${page}`] && (
+                    <div className="w-16 h-16 sm:w-24 sm:h-24 rounded-full bg-gray-100 flex items-center justify-center">
+                      <div className="w-8 h-8 border-4 border-[#15A6F7] border-r-transparent rounded-full animate-spin"></div>
+                    </div>
+                  )}
                   <img
                     src={testimonials[page].image}
                     alt={testimonials[page].name}
-                    className="w-16 h-16 sm:w-24 sm:h-24 rounded-full object-cover bg-gray-200"
+                    onLoad={() => handleImageLoad(`current-${page}`)}
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.src = getImagePath('/images/default-avatar.png');
+                      handleImageLoad(`current-${page}`);
+                    }}
+                    className={`w-16 h-16 sm:w-24 sm:h-24 rounded-full object-cover bg-gray-200 ${!imageLoaded[`current-${page}`] ? 'hidden' : 'block'
+                      }`}
                   />
                   <div>
                     <h3 className="font-bold text-xl sm:text-2xl text-gray-900">
@@ -186,42 +233,65 @@ const Testimonials = () => {
               </motion.div>
             </AnimatePresence>
           </div>
-
-          {/* Next Card - Hidden below 900px */}
-          <div className="hidden custom:block w-[450px] h-[600px] bg-[#E8F4F8] rounded-3xl p-6 sm:p-8 shadow-lg opacity-50">
+          <div
+            className="hidden custom:block w-[450px] h-[600px] bg-[#E8F4F8] rounded-3xl p-6 sm:p-8 shadow-lg opacity-50 transition-opacity duration-300"
+            style={{
+              opacity: direction < 0 ? 0.3 : 0.5,
+              transition: 'opacity 0.3s ease-in-out'
+            }}
+          >
             <div className="flex items-center gap-4 sm:gap-6 mb-4 sm:mb-8">
               <img
-                src={testimonials[(page + 1) % testimonials.length].image}
+                src={testimonials[nextIndex].image}
                 alt="Next testimonial"
+                onLoad={() => handleImageLoad(`next-${nextIndex}`)}
                 className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover bg-gray-200"
               />
               <div>
                 <h3 className="font-bold text-xl sm:text-2xl text-gray-900">
-                  {testimonials[(page + 1) % testimonials.length].name}
+                  {testimonials[nextIndex].name}
                 </h3>
                 <p className="text-base sm:text-lg text-gray-600">
-                  {testimonials[(page + 1) % testimonials.length].role}
+                  {testimonials[nextIndex].role}
                 </p>
               </div>
             </div>
             <div className="h-auto">
               <p className="text-sm sm:text-base leading-snug sm:leading-relaxed text-gray-700 whitespace-pre-line text-justify">
-                {testimonials[(page + 1) % testimonials.length].text}
+                {testimonials[nextIndex].text}
               </p>
             </div>
           </div>
 
-          {/* Navigation Dots */}
+          <button
+            onClick={() => paginate(-1)}
+            className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white rounded-full w-10 h-10 flex items-center justify-center shadow-lg z-10"
+            aria-label="Previous testimonial"
+          >
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 4L6 10L12 16" stroke="#0077B6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+
+          <button
+            onClick={() => paginate(1)}
+            className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white rounded-full w-10 h-10 flex items-center justify-center shadow-lg z-10"
+            aria-label="Next testimonial"
+          >
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M8 4L14 10L8 16" stroke="#0077B6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+
           <div className="absolute -bottom-16 custom:-bottom-20 left-1/2 transform -translate-x-1/2 flex justify-center space-x-2">
             {testimonials.map((_, index) => (
               <button
                 key={index}
                 onClick={() => handleDotClick(index)}
-                className={`w-2 custom:w-3 h-2 custom:h-3 rounded-full transition-all duration-300 ${
-                  index === page 
-                    ? 'bg-black w-4 custom:w-6' 
-                    : 'bg-white/50 hover:bg-white/70'
-                }`}
+                className={`w-2 custom:w-3 h-2 custom:h-3 rounded-full transition-all duration-300 ${index === page
+                  ? 'bg-black w-4 custom:w-6'
+                  : 'bg-white/50 hover:bg-white/70'
+                  }`}
                 aria-label={`Go to testimonial ${index + 1}`}
               />
             ))}

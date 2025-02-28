@@ -184,7 +184,7 @@ const Contact = () => {
                 <button
                   type="submit"
                   disabled={status === 'sending'}
-                  className="w-full py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:bg-blue-400"
+                  className="w-full py-3 bg-slate-300 text-black rounded-lg font-semibold hover:bg-slate-400 active:bg-slate-400 transition-colors disabled:bg-blue-400"
                 >
                   {status === 'sending' ? 'Submitting...' : 'Submit'}
                 </button>

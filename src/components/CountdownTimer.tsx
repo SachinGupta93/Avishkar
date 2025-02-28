@@ -1,81 +1,105 @@
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect } from 'react';
 
-interface TimeLeft {
-  days: number;
-  hours: number;
-  minutes: number;
-  seconds: number;
-}
-
-const CountdownTimer = () => {
-  const calculateTimeLeft = (): TimeLeft => {
-    const targetDate = new Date('2025-03-03').getTime();
-    const now = new Date().getTime();
-    const difference = targetDate - now;
-
-    return {
-      days: Math.floor(difference / (1000 * 60 * 60 * 24)),
-      hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
-      minutes: Math.floor((difference / 1000 / 60) % 60),
-      seconds: Math.floor((difference / 1000) % 60)
-    };
-  };
-
-  const [timeLeft, setTimeLeft] = useState<TimeLeft>(calculateTimeLeft());
+const CountdownTimer: React.FC = () => {
+  const [timeLeft, setTimeLeft] = useState({
+    days: 0,
+    hours: 0,
+    minutes: 0,
+    seconds: 0
+  });
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setTimeLeft(calculateTimeLeft());
-    }, 1000);
-
+    // Set your target date here
+    const targetDate = new Date('2025-04-09T00:00:00');
+    
+    const calculateTimeLeft = () => {
+      const difference = +targetDate - +new Date();
+      
+      if (difference > 0) {
+        setTimeLeft({
+          days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+          hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
+          minutes: Math.floor((difference / 1000 / 60) % 60),
+          seconds: Math.floor((difference / 1000) % 60)
+        });
+      }
+    };
+    
+    calculateTimeLeft();
+    const timer = setInterval(calculateTimeLeft, 1000);
+    
     return () => clearInterval(timer);
   }, []);
-
-  const timeBlocks = [
-    { label: 'Days', value: timeLeft.days },
-    { label: 'Hours', value: timeLeft.hours },
-    { label: 'Minutes', value: timeLeft.minutes },
-    { label: 'Seconds', value: timeLeft.seconds }
-  ];
+  
+  const formatNumber = (num: number) => {
+    return num.toString().padStart(2, '0');
+  };
 
   return (
-    <div className="text-center">
-      <div className="flex items-center justify-center gap-8 mb-16">
-        <div className="w-48 h-1 bg-[#15A6F7]"></div>
-        <h1 className="text-[48px] sm:text-[56px] font-bold text-[#15A6F7] whitespace-nowrap">
-          Event Starts In
-        </h1>
-        <div className="w-48 h-1 bg-[#15A6F7]"></div>
-      </div>
-      <div className="flex justify-center items-center">
-        {timeBlocks.map(({ label, value }, index) => (
-          <>
-            <div key={label} className="text-center">
-              <motion.div
-                key={value}
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                className="w-20 h-20 sm:w-32 sm:h-32 md:w-40 md:h-40 lg:w-44 lg:h-44 bg-white rounded-2xl sm:rounded-3xl shadow-lg sm:shadow-xl flex items-center justify-center mb-4 sm:mb-6 relative overflow-hidden"
-              >
-                <div className="absolute inset-0 bg-gradient-to-br from-indigo-100 to-white"></div>
-                <span className="relative text-2xl sm:text-4xl md:text-6xl lg:text-7xl font-bold text-[#1A365D">
-                  {value.toString().padStart(2, '0')}
-                </span>
-              </motion.div>
-              <span className="text-sm sm:text-lg md:text-2xl lg:text-3xl font-semibold text-gray-900">
-                {label}
-              </span>
+    <div className="flex flex-col items-center space-y-2 sm:space-y-6 md:space-y-4 lg:space-y-10">
+     <div className="flex items-center justify-center gap-4 sm:gap-8 mb-2">
+              <div className="w-24 sm:w-48 h-[2px] bg-[#15A6F7]"></div>
+              <h2 className="text-[36px] sm:text-[48px] font-bold text-[#15A6F7] whitespace-nowrap">Events Start In</h2>
+              <div className="w-24 sm:w-48 h-[2px] bg-[#15A6F7]"></div>
             </div>
-            {index < timeBlocks.length - 1 && (
-              <div className="flex items-center justify-center w-8 sm:w-12 md:w-16 lg:w-20">
-                <span className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-bold text-black -mt-8">
-                  :
-                </span>
-              </div>
-            )}
-          </>
-        ))}
+      
+      <div className="flex justify-center items-center space-x-1 xs:space-x-2 sm:space-x-3 md:space-x-4">
+        {/* Days */}
+        <div className="flex flex-col items-center">
+          <div className="bg-white/40 backdrop-blur-sm shadow-lg border border-white/50 text-black text-xl xs:text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold rounded-2xl 
+                        w-14 xs:w-16 sm:w-20 md:w-24 lg:w-28 
+                        h-14 xs:h-16 sm:h-20 md:h-24 lg:h-28 
+                        flex items-center justify-center
+                        filter drop-shadow-md">
+            {formatNumber(timeLeft.days)}
+          </div>
+          <span className="text-black text-xs sm:text-sm md:text-base mt-2">Days</span>
+        </div>
+        
+        {/* Colon */}
+        <div className="text-black text-xl xs:text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold flex flex-col items-center h-14 xs:h-16 sm:h-20 md:h-24 lg:h-28 mt-5">:</div>
+        
+        {/* Hours */}
+        <div className="flex flex-col items-center">
+          <div className="bg-white/40 backdrop-blur-sm shadow-lg border border-white/50 text-black text-xl xs:text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold rounded-2xl 
+                        w-14 xs:w-16 sm:w-20 md:w-24 lg:w-28 
+                        h-14 xs:h-16 sm:h-20 md:h-24 lg:h-28 
+                        flex items-center justify-center
+                        filter drop-shadow-md">
+            {formatNumber(timeLeft.hours)}
+          </div>
+          <span className="text-black text-xs sm:text-sm md:text-base mt-2">Hours</span>
+        </div>
+        
+        {/* Colon */}
+        <div className="text-black text-xl xs:text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold flex flex-col items-center h-14 xs:h-16 sm:h-20 md:h-24 lg:h-28 mt-5">:</div>
+        
+        {/* Minutes */}
+        <div className="flex flex-col items-center">
+          <div className="bg-white/40 backdrop-blur-sm shadow-lg border border-white/50 text-black text-xl xs:text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold rounded-2xl 
+                        w-14 xs:w-16 sm:w-20 md:w-24 lg:w-28 
+                        h-14 xs:h-16 sm:h-20 md:h-24 lg:h-28 
+                        flex items-center justify-center
+                        filter drop-shadow-md">
+            {formatNumber(timeLeft.minutes)}
+          </div>
+          <span className="text-black text-xs sm:text-sm md:text-base mt-2">Minutes</span>
+        </div>
+        
+        {/* Colon */}
+        <div className="text-black text-xl xs:text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold flex flex-col items-center h-14 xs:h-16 sm:h-20 md:h-24 lg:h-28 mt-5">:</div>
+        
+        {/* Seconds */}
+        <div className="flex flex-col items-center">
+          <div className="bg-white/40 backdrop-blur-sm shadow-lg border border-white/50 text-black text-xl xs:text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold rounded-2xl 
+                        w-14 xs:w-16 sm:w-20 md:w-24 lg:w-28 
+                        h-14 xs:h-16 sm:h-20 md:h-24 lg:h-28 
+                        flex items-center justify-center
+                        filter drop-shadow-md">
+            {formatNumber(timeLeft.seconds)}
+          </div>
+          <span className="text-black text-xs sm:text-sm md:text-base mt-2">Seconds</span>
+        </div>
       </div>
     </div>
   );
